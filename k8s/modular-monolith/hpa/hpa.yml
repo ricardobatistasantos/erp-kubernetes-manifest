@@ -1,0 +1,25 @@
+apiVersion: autoscaling/v2 # Versão da API para HorizontalPodAutoscaler
+kind: HorizontalPodAutoscaler # Tipo de recurso: escala horizontalmente pods
+metadata:
+  name: modular-monolith-hpa # Nome do HPA
+  namespace: modular-monolith # Namespace onde será aplicado
+spec:
+  scaleTargetRef: # Qual recurso será escalonado
+    apiVersion: apps/v1
+    kind: Deployment
+    name: modular-monolith # Nome do deployment alvo
+  minReplicas: 1 # Mínimo de pods
+  maxReplicas: 5 # Máximo de pods
+  metrics:
+    - type: Resource # Tipo de métrica (CPU, memória, etc)
+      resource:
+        name: cpu # Usar métrica de CPU
+        target:
+          type: Utilization # Tipo de alvo: utilização percentual
+          averageUtilization: 70 # Escala quando CPU média ultrapassar 70%
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80 # escala se memória passar de 80%

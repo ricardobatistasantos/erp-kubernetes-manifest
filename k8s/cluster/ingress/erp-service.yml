@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: erp-modular-ingress
+  namespace: erp-modular-cluster
+  annotations:
+    kubernetes.io/ingress.class: "nginx" # controller do Minikube
+spec:
+  rules:
+    - host: erp-monolith.local # Domínio customizado, adicione no /etc/hosts(linux) apontando para o IP do Minikube
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: erp-modular-local
+                port:
+                  number: 3000

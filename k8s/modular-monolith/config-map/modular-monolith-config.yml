@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: answer-card-config
+  namespace: modular-monolith
+data:
+  NODE_PORT: "3000"
+  NODE_ENV: "local"
+
+  # RabbitMQ
+  AMQP_URL: "amqp://guest:guest@host.minikube.internal:5672"
+  AMQP_EXCHANGE: "answer-card.exchange"
+
+  # Postgres
+  POSTGRES_HOST: "host.minikube.internal"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "user"
+
+  # Logging
+  LOGGING: ""
+
+  # AWS
+  AWS_REGION: "us-east-1"
+  BUCKET_NAME: "meu-bucket-local"
+  AWS_S3_ENDPOINT: "http://host.minikube.internal:4566"
+  S3_PREFIX: "erp"

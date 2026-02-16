@@ -1,0 +1,12 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: k3d-erp-modular-cluster
+servers: 1  # Número de nós master
+agents: 2   # Número de nós worker
+options:
+  k3s:
+    extraArgs:
+      - arg: "--no-deploy=traefik"
+        nodeFilters:
+          - server:*

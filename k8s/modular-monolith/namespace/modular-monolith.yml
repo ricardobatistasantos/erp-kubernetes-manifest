@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: modular-monolith
+  annotations:
+    description: ""
+  labels:
+    environment: dev

@@ -1,0 +1,12 @@
+apiVersion: v1 # Versão da API do Kubernetes para ResourceQuota
+kind: ResourceQuota # Tipo de recurso: cota de recursos
+metadata:
+  name: answer-card-quota # Nome da cota
+  namespace: modular-monolith # Namespace onde a cota será aplicada
+spec:
+  hard: # Limites máximos que podem ser consumidos no namespace
+    requests.cpu: "1" # CPU total solicitada (somando todos os pods) não pode passar de 1 core
+    requests.memory: "1Gi" # Memória total solicitada não pode passar de 1 GB
+    limits.cpu: "2" # Limite total de CPU para todos os pods é 2 cores
+    limits.memory: "2Gi" # Limite total de memória para todos os pods é 2 GB
+    pods: "5" # Número máximo de pods permitidos no namespace

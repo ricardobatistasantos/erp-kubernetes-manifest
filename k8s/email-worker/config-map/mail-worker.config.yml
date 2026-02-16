@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mail-worker-config
+  namespace: mail-worker
+data:
+
+  # REDIS
+  REDIS_HOST: "host.minikube.internal"
+  REDIS_PORT: "6379"
+
+  # PROVIDER EMAIL
+  GMAIL_HOST: "smtp.gmail.com"
+  GMAIL_PORT: "587"
+
+  # Logging
+  LOGGING: ""

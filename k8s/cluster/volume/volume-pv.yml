@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-shared-storage
+spec:
+  capacity:
+    storage: 20Gi  # Total de armazenamento disponível
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany  # Permite acesso simultâneo por múltiplos pods
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /tmp/k8s-pv

@@ -1,0 +1,56 @@
+apiVersion: apps/v1 # Versão da API para recursos do tipo Deployment
+kind: Deployment # Tipo do recurso
+metadata:
+  name: modular-monolith # Nome do Deployment
+  namespace: modular-monolith # Namespace onde o recurso será criado
+  labels: # Labels para identificação
+    app: modular-monolith # Rótulo identificador do app
+spec:
+  replicas: 1 # Quantidade de réplicas do pod
+  selector: # Define quais pods este Deployment gerencia
+    matchLabels:
+      app: modular-monolith # Filtra pods com essa label
+  template: # Modelo para criação dos pods
+    metadata:
+      labels:
+        app: modular-monolith # Label do pod
+    spec:
+      containers: # Lista de containers no pod
+        - name: modular-monolith # Nome do container
+          image: modular-monolith:latest # Imagem Docker que será utilizada
+          imagePullPolicy: IfNotPresent # Política de pull da imagem (só baixa se não existir localmente)
+          ports:
+            - containerPort: 3000 # Porta exposta dentro do container
+          resources: # Limites e requisições de CPU e memória
+            requests:
+              cpu: "200m" # CPU mínima reservada
+              memory: "256Mi" # Memória mínima reservada
+            limits:
+              cpu: "500m" # CPU máxima permitida
+              memory: "512Mi" # Memória máxima permitida
+          readinessProbe: # Verificação se o container está pronto para receber tráfego
+            httpGet:
+              path: / # Caminho para checar a saúde
+              port: 3000 # Porta que será checada
+            initialDelaySeconds: 5 # Tempo inicial antes de começar a checar
+            periodSeconds: 10 # Intervalo entre verificações
+          livenessProbe: # Verificação se o container está vivo
+            httpGet:
+              path: / # Caminho para checar
+              port: 3000 # Porta usada na verificação
+            initialDelaySeconds: 15 # Tempo inicial antes da primeira checagem
+            periodSeconds: 20 # Intervalo entre verificações
+---
+apiVersion: v1 # Versão da API para recursos do tipo Service
+kind: Service # Tipo do recurso
+metadata:
+  name: modular-monolith # Nome do Service
+  namespace: modular-monolith # Namespace onde o recurso será criado
+spec:
+  type: ClusterIP # Tipo do serviço (ClusterIP só acessível dentro do cluster)
+  selector:
+    app: modular-monolith # Seleciona pods com essa label
+  ports:
+    - name: http # Nome descritivo da porta
+      port: 3000 # Porta exposta pelo serviço dentro do cluster
+      targetPort: 3000 # Porta interna do container para onde o tráfego será enviado

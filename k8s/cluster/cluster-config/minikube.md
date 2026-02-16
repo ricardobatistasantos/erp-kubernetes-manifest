@@ -1,0 +1,1 @@
+minikube start --profile=minikube-erp-modular-cluster --driver=docker

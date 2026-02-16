@@ -1,0 +1,16 @@
+services:
+  redis:
+    build: ./redis
+    container_name: erp_modular_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=SuperSenhaSegura123!
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+
+volumes:
+  redis_data:
+    driver: local

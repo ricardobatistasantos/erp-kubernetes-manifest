@@ -1,0 +1,14 @@
+apiVersion: v1 # Versão da API para LimitRange
+kind: LimitRange # Tipo de recurso: define limites padrão para containers
+metadata:
+  name: answer-card-limits # Nome do recurso
+  namespace: modular-monolith # Namespace onde será aplicado
+spec:
+  limits:
+    - default: # Limites padrão aplicados quando não forem especificados no container
+        cpu: "500m" # Limite padrão de CPU por container: 0.5 core
+        memory: "512Mi" # Limite padrão de memória por container: 512 MB
+      defaultRequest: # Solicitações padrão aplicadas se não forem definidas
+        cpu: "200m" # Solicitação padrão de CPU por container: 0.2 core
+        memory: "256Mi" # Solicitação padrão de memória por container: 256 MB
+      type: Container # Aplica-se a containers (pode ser Pod ou PersistentVolumeClaim também)

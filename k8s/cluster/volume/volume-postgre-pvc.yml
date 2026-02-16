@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume-postgre-pvc
+  namespace: erp-ecommerce
+spec:
+  accessModes:
+    - ReadWriteOnce  # Deve corresponder ao PV
+  resources:
+    requests:
+      storage: 2Gi  # Tamanho solicitado
+  storageClassName: standard  # Deve corresponder ao PV

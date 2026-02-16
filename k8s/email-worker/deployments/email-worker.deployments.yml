@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mail-worker
+  namespace: mail-worker
+  labels:
+    app: mail-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mail-worker
+  template:
+    metadata:
+      labels:
+        app: mail-worker
+    spec:
+      containers:
+        - name: mail-worker
+          image: erp-modular/mail-worker:latest # minikube image load erp-modular/mail-worker:latest --profile minikube-erp-modular-cluster
+          imagePullPolicy: IfNotPresent # or Never
+          envFrom:
+            - configMapRef:
+                name: mail-worker-config
+            - secretRef:
+                name: mail-worker-secret
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          ports:
+            - containerPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mail-worker
+  namespace: mail-worker
+  labels:
+    app: mail-worker
+spec:
+  type: ClusterIP
+  selector:
+    app: mail-worker
+  ports:
+    - name: metrics # for metrics
+      port: 3001
+      targetPort: 3001
