@@ -27,31 +27,42 @@ Repositório de manifests Kubernetes para o ERP Modular Monolith. Contém toda a
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Cluster Kubernetes                         │
-│                                                              │
+│                    Cluster Kubernetes                       │
+│                                                             │
 │  ┌─────────────────────┐     ┌──────────────────────┐       │
-│  │  Namespace:          │     │  Namespace:           │       │
-│  │  modular-monolith    │     │  mail-worker          │       │
-│  │                      │     │                       │       │
-│  │  ┌────────────────┐  │     │  ┌─────────────────┐  │       │
-│  │  │ Deployment     │  │     │  │ Deployment      │  │       │
-│  │  │ modular-monolith│  │     │  │ mail-worker     │  │       │
-│  │  │ :3000          │  │     │  │ :3001           │  │       │
-│  │  └────────────────┘  │     │  └─────────────────┘  │       │
+│  │  Namespace:         │     │  Namespace:          │       │
+│  │  modular-monolith   │     │  mail-worker         │       │
+│  │                     │     │                      │       │
+│  │  ┌─────────────────┐│     │  ┌─────────────────┐ │       │
+│  │  │ Deployment      ││     │  │ Deployment      │ │       │
+│  │  │ modular-monolith││     │  │ mail-worker     │ │       │
+│  │  │ :3000           ││     │  │ :3001           │ │       │
+│  │  └─────────────────┘│     │  └─────────────────┘ │       │
 │  └─────────────────────┘     └──────────────────────┘       │
-│                                                              │
-│  ┌─────────────────────┐                                     │
-│  │  Ingress (nginx)    │                                     │
+│                                                             │
+│  ┌─────────────────────┐                                    │
+│  │  Namespace:         │                                    │
+│  │  auth-worker        │                                    │
+│  │                     │                                    │
+│  │  ┌────────────────┐ │                                    │
+│  │  │ Deployment     │ │                                    │
+│  │  │ auth-worker    │ │                                    │
+│  │  │ :3002          │ │                                    │
+│  │  └────────────────┘ │                                    │
+│  └─────────────────────┘                                    │
+│                                                             │
+│  ┌─────────────────────┐                                    │
+│  │  Ingress (nginx)    │                                    │
 │  │  erp-monolith.local │ ──▶ modular-monolith:3000          │
-│  └─────────────────────┘                                     │
+│  └─────────────────────┘                                    │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼ (host.minikube.internal)
 ┌─────────────────────────────────────────────────────────────┐
-│                  Máquina Host                                 │
-│                                                              │
-│  PostgreSQL :5432  │  MongoDB :27017  │  RabbitMQ :5672      │
-│  Redis :6379       │  LocalStack :4566                       │
+│                  Máquina Host                               │
+│                                                             │
+│  PostgreSQL :5432  │  MongoDB :27017  │  RabbitMQ :5672     │
+│  Redis :6379       │  LocalStack :4566                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -60,6 +71,7 @@ Repositório de manifests Kubernetes para o ERP Modular Monolith. Contém toda a
 2. O Ingress encaminha para o Service `modular-monolith` na porta 3000
 3. A aplicação se comunica com serviços externos (Postgres, MongoDB, RabbitMQ) via `host.minikube.internal`
 4. O `mail-worker` consome filas do RabbitMQ/Redis e dispara emails via SMTP
+5. O `auth-worker` processa tarefas de autenticação consumindo filas (porta 3002)
 
 ---
 
@@ -129,7 +141,14 @@ erp-kubernetes-manifest/
 │   │   ├── deployments/
 │   │   ├── hpa/
 │   │   └── network-policy/
-│   ├── auth-worker/                 # Worker de autenticação (scaffold)
+│   ├── auth-worker/                 # Worker de autenticação
+│   │   ├── namespace/
+│   │   ├── service-account/
+│   │   ├── config-map/
+│   │   ├── secrets/
+│   │   ├── deployments/
+│   │   ├── hpa/
+│   │   └── volumes/
 │   └── sped-php-worker/             # Worker SPED fiscal (scaffold)
 └── README.md
 ```
@@ -186,6 +205,7 @@ cd ..
 # Construa as imagens do projeto (assumindo que estão em outro repo)
 minikube image load modular-monolith:1.0.0 --profile minikube-erp-modular-cluster
 minikube image load erp-modular/mail-worker:1.0.0 --profile minikube-erp-modular-cluster
+minikube image load erp-modular/auth-worker:1.0.0 --profile minikube-erp-modular-cluster
 ```
 
 ### 3. Aplicar manifests na ordem correta
@@ -220,6 +240,15 @@ kubectl apply -f k8s/email-worker/network-policy/
 kubectl apply -f k8s/email-worker/deployments/
 kubectl apply -f k8s/email-worker/hpa/
 
+# --- Auth Worker ---
+kubectl apply -f k8s/auth-worker/namespace/
+kubectl apply -f k8s/auth-worker/service-account/
+kubectl apply -f k8s/auth-worker/config-map/
+kubectl apply -f k8s/auth-worker/secrets/
+kubectl apply -f k8s/auth-worker/network-policy/
+kubectl apply -f k8s/auth-worker/deployments/
+kubectl apply -f k8s/auth-worker/hpa/
+
 # --- Ingress ---
 kubectl apply -f k8s/cluster/ingress/
 ```
@@ -230,14 +259,17 @@ kubectl apply -f k8s/cluster/ingress/
 # Status dos pods
 kubectl get pods -n modular-monolith
 kubectl get pods -n mail-worker
+kubectl get pods -n auth-worker
 
 # Verificar se estão healthy
 kubectl describe deployment modular-monolith -n modular-monolith
 kubectl describe deployment mail-worker -n mail-worker
+kubectl describe deployment auth-worker -n auth-worker
 
 # Logs
 kubectl logs -f deployment/modular-monolith -n modular-monolith
 kubectl logs -f deployment/mail-worker -n mail-worker
+kubectl logs -f deployment/auth-worker -n auth-worker
 ```
 
 ---
@@ -316,9 +348,19 @@ Worker que consome filas e envia emails via SMTP (Gmail). Expõe porta 3001 para
 | NetworkPolicy | Deny-all + allow egress |
 | ServiceAccount | `mail-worker-sa` (sem auto-mount de token) |
 
-### auth-worker / sped-php-worker
+### auth-worker
 
-Scaffolds preparados para futura implementação. Apenas namespace definido (auth-worker) ou estrutura de pastas com `.gitkeep`.
+Worker responsável pelo processamento de tarefas de autenticação. Expõe porta 3002 para health checks.
+
+| Recurso | Descrição |
+|---------|-----------|
+| Deployment | 1 réplica, imagem `erp-modular/auth-worker:1.0.0` |
+| Service | ClusterIP na porta 3002 |
+| ServiceAccount | `auth-worker-sa` (sem auto-mount de token) |
+
+### sped-php-worker
+
+Scaffold preparado para futura implementação. Apenas estrutura de pastas com `.gitkeep`.
 
 ---
 
@@ -407,11 +449,11 @@ annotations:
 
 Ambos os deployments possuem probes configuradas:
 
-| Probe | modular-monolith | mail-worker |
-|-------|-----------------|-------------|
-| startupProbe | GET / :3000 (fail: 30x, interval: 2s) | GET /health :3001 (fail: 30x, interval: 2s) |
-| readinessProbe | GET / :3000 (delay: 5s, interval: 10s) | GET /health :3001 (delay: 5s, interval: 10s) |
-| livenessProbe | GET / :3000 (delay: 15s, interval: 20s) | GET /health :3001 (delay: 15s, interval: 20s) |
+| Probe | modular-monolith | mail-worker | auth-worker |
+|-------|-----------------|-------------|-------------|
+| startupProbe | GET / :3000 (fail: 30x, interval: 2s) | GET /health :3001 (fail: 30x, interval: 2s) | GET /health :3002 (fail: 30x, interval: 2s) |
+| readinessProbe | GET / :3000 (delay: 5s, interval: 10s) | GET /health :3001 (delay: 5s, interval: 10s) | GET /health :3002 (delay: 5s, interval: 10s) |
+| livenessProbe | GET / :3000 (delay: 15s, interval: 20s) | GET /health :3001 (delay: 15s, interval: 20s) | GET /health :3002 (delay: 15s, interval: 20s) |
 
 ### Logs
 
@@ -419,6 +461,7 @@ Ambos os deployments possuem probes configuradas:
 # Em tempo real
 kubectl logs -f deployment/modular-monolith -n modular-monolith
 kubectl logs -f deployment/mail-worker -n mail-worker
+kubectl logs -f deployment/auth-worker -n auth-worker
 
 # Últimas 100 linhas
 kubectl logs --tail=100 deployment/modular-monolith -n modular-monolith
@@ -434,6 +477,7 @@ O HPA (Horizontal Pod Autoscaler) está configurado para ambos os workloads:
 |----------|-----|-----|---------------|-----------------|
 | modular-monolith | 1 | 5 | 70% | 80% |
 | mail-worker | 1 | 3 | 70% | 80% |
+| auth-worker | — | — | — | — |
 
 **Requisito**: O `metrics-server` deve estar habilitado no cluster.
 
@@ -444,6 +488,7 @@ minikube addons enable metrics-server --profile=minikube-erp-modular-cluster
 # Verificar HPA
 kubectl get hpa -n modular-monolith
 kubectl get hpa -n mail-worker
+kubectl get hpa -n auth-worker
 ```
 
 ---
@@ -543,9 +588,10 @@ kubectl get all -n modular-monolith
 
 # Deletar todos os recursos do projeto
 kubectl delete -f k8s/cluster/ingress/
+kubectl delete -f k8s/auth-worker/deployments/
 kubectl delete -f k8s/email-worker/deployments/
 kubectl delete -f k8s/modular-monolith/deployments/
-kubectl delete ns modular-monolith mail-worker
+kubectl delete ns modular-monolith mail-worker auth-worker
 
 # Restart de um deployment
 kubectl rollout restart deployment/modular-monolith -n modular-monolith

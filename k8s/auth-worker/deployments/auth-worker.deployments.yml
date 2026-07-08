@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-worker
+  namespace: auth-worker
+  labels:
+    app: auth-worker
+    app.kubernetes.io/name: auth-worker
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-worker
+  template:
+    metadata:
+      labels:
+        app: auth-worker
+        app.kubernetes.io/name: auth-worker
+    spec:
+      serviceAccountName: auth-worker-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: auth-worker
+          image: erp-modular/auth-worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: auth-worker-config
+            - secretRef:
+                name: auth-worker-secret
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          ports:
+            - containerPort: 3002
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            failureThreshold: 30
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-worker
+  namespace: auth-worker
+  labels:
+    app: auth-worker
+    app.kubernetes.io/name: auth-worker
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3002"
+spec:
+  type: ClusterIP
+  selector:
+    app: auth-worker
+  ports:
+    - name: http
+      port: 3002
+      targetPort: 3002
