@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: auth-worker
   annotations:
-    description: ""
+    description: "Namespace do worker de autenticação"
   labels:
+    app.kubernetes.io/name: auth-worker
     environment: dev

@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: mail-worker
   annotations:
-    description: ""
+    description: "Namespace do worker de envio de emails"
   labels:
-    environment: development
+    app.kubernetes.io/name: mail-worker
+    environment: dev

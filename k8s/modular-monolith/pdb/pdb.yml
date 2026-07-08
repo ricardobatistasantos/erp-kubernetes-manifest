@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: modular-monolith-pdb
+  namespace: modular-monolith
+  labels:
+    app.kubernetes.io/name: modular-monolith
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: modular-monolith

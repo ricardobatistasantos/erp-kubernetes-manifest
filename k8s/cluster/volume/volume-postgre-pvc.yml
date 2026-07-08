@@ -2,11 +2,14 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: volume-postgre-pvc
-  namespace: erp-ecommerce
+  namespace: modular-monolith
+  labels:
+    app.kubernetes.io/name: modular-monolith
+    app.kubernetes.io/component: postgres
 spec:
   accessModes:
-    - ReadWriteOnce  # Deve corresponder ao PV
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi  # Tamanho solicitado
-  storageClassName: standard  # Deve corresponder ao PV
+      storage: 2Gi
+  storageClassName: local-path

@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: modular-monolith
+  labels:
+    app.kubernetes.io/name: modular-monolith
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-modular-monolith-ingress
+  namespace: modular-monolith
+  labels:
+    app.kubernetes.io/name: modular-monolith
+spec:
+  podSelector:
+    matchLabels:
+      app: modular-monolith
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-modular-monolith-egress
+  namespace: modular-monolith
+  labels:
+    app.kubernetes.io/name: modular-monolith
+spec:
+  podSelector:
+    matchLabels:
+      app: modular-monolith
+  policyTypes:
+    - Egress
+  egress:
+    - {} # Permite egress para acessar RabbitMQ, Postgres, MongoDB externos

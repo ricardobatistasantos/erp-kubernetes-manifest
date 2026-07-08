@@ -2,11 +2,14 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: rabbitmq-data
-  namespace: answer-card-dev
+  namespace: modular-monolith
+  labels:
+    app.kubernetes.io/name: modular-monolith
+    app.kubernetes.io/component: rabbitmq
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  storageClassName: standard
+  storageClassName: local-path

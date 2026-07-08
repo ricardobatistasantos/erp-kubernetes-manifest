@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: modular-monolith
   annotations:
-    description: ""
+    description: "Namespace principal do ERP modular monolith"
   labels:
+    app.kubernetes.io/name: modular-monolith
     environment: dev
